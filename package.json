@@ -1,0 +1,29 @@
+{
+  "name": "guiadev-interview-app",
+  "version": "2.0.0",
+  "description": "Aplicação interativa para preparação de entrevistas de desenvolvedores com IA e banco de dados",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "interview",
+    "developer",
+    "preparation",
+    "ai",
+    "supabase",
+    "questions"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.55.0",
+    "axios": "^1.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "open": "^10.1.0"
+  }
+}

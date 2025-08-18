@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gerenciar Perguntas</title>
+    
+    <!-- External CSS and Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .admin-table th { background-color: #0f172a; color: white; }
+        .admin-table td { border-bottom: 1px solid #e2e8f0; }
+        .admin-table tr:hover { background-color: #f8fafc; }
+        .status-active { color: #059669; font-weight: 600; }
+        .status-inactive { color: #dc2626; font-weight: 600; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-700">
+
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full">
+            <h1 class="text-2xl font-bold text-center mb-6">🔐 Admin - GuiaDev</h1>
+            <div class="space-y-4">
+                <input 
+                    type="password" 
+                    id="admin-password" 
+                    placeholder="Digite a senha de administrador"
+                    class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                >
+                <button 
+                    id="login-btn" 
+                    class="w-full bg-teal-600 text-white font-bold py-3 rounded-lg hover:bg-teal-700 transition-colors"
+                >
+                    Entrar
+                </button>
+                <div id="login-error" class="text-red-500 text-sm text-center hidden"></div>
+            </div>
+            <div class="mt-6 text-center">
+                <a href="index.html" class="text-teal-600 hover:text-teal-700 text-sm">← Voltar para a aplicação</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-slate-800">🛠️ Painel Administrativo</h1>
+                <div class="flex gap-4">
+                    <button id="add-question-btn" class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition-colors">
+                        ➕ Nova Pergunta
+                    </button>
+                    <a href="index.html" class="bg-slate-600 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition-colors">
+                        👁️ Ver App
+                    </a>
+                    <button id="logout-btn" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                        🚪 Sair
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container mx-auto p-6">
+            <!-- Filters -->
+            <div class="bg-white p-4 rounded-lg shadow mb-6">
+                <h3 class="text-lg font-semibold mb-4">🔍 Filtros</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <select id="filter-seniority" class="p-2 border rounded-lg">
+                        <option value="">Todos os níveis</option>
+                        <option value="Estagiário">Estagiário</option>
+                        <option value="Júnior">Júnior</option>
+                        <option value="Pleno">Pleno</option>
+                        <option value="Sênior">Sênior</option>
+                    </select>
+                    <select id="filter-stack" class="p-2 border rounded-lg">
+                        <option value="">Todas as tecnologias</option>
+                    </select>
+                    <select id="filter-status" class="p-2 border rounded-lg">
+                        <option value="">Todos os status</option>
+                        <option value="true">Ativas</option>
+                        <option value="false">Inativas</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow text-center">
+                    <div class="text-2xl font-bold text-teal-600" id="total-questions">0</div>
+                    <div class="text-sm text-slate-500">Total de Perguntas</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow text-center">
+                    <div class="text-2xl font-bold text-blue-600" id="active-questions">0</div>
+                    <div class="text-sm text-slate-500">Perguntas Ativas</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow text-center">
+                    <div class="text-2xl font-bold text-purple-600" id="total-stacks">0</div>
+                    <div class="text-sm text-slate-500">Tecnologias</div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow text-center">
+                    <div class="text-2xl font-bold text-orange-600" id="total-categories">0</div>
+                    <div class="text-sm text-slate-500">Categorias</div>
+                </div>
+            </div>
+
+            <!-- Questions Table -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="p-4 border-b flex justify-between items-center">
+                    <h3 class="text-lg font-semibold">📋 Perguntas Cadastradas</h3>
+                    <div id="questions-count" class="text-sm text-slate-500"></div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="admin-table w-full">
+                        <thead>
+                            <tr>
+                                <th class="p-3 text-left">ID</th>
+                                <th class="p-3 text-left">Senioridade</th>
+                                <th class="p-3 text-left">Stack</th>
+                                <th class="p-3 text-left">Categoria</th>
+                                <th class="p-3 text-left">Pergunta</th>
+                                <th class="p-3 text-left">Status</th>
+                                <th class="p-3 text-left">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="questions-table-body">
+                            <!-- Perguntas serão carregadas aqui -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="table-loading" class="text-center py-8">
+                    <div class="loader mx-auto"></div>
+                    <p class="text-slate-500 mt-4">Carregando perguntas...</p>
+                </div>
+
+                <div id="table-empty" class="text-center py-8 hidden">
+                    <p class="text-slate-500">Nenhuma pergunta encontrada com os filtros aplicados.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal para Adicionar/Editar Pergunta -->
+    <div id="question-modal" class="modal-overlay">
+        <div class="modal-content max-w-2xl">
+            <h3 id="modal-title" class="text-2xl font-bold text-slate-800 mb-6">➕ Nova Pergunta</h3>
+            
+            <form id="question-form" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Senioridade *</label>
+                        <select id="form-seniority" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500" required>
+                            <option value="">Selecione...</option>
+                            <option value="Estagiário">Estagiário</option>
+                            <option value="Júnior">Júnior</option>
+                            <option value="Pleno">Pleno</option>
+                            <option value="Sênior">Sênior</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Tecnologia/Stack *</label>
+                        <input type="text" id="form-stack" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500" 
+                               placeholder="Ex: JavaScript/React" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Categoria *</label>
+                    <input type="text" id="form-category" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500" 
+                           placeholder="Ex: Fundamentos JavaScript" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Objetivo da Categoria</label>
+                    <textarea id="form-category-goal" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500" 
+                              rows="2" placeholder="Descreva o objetivo desta categoria de perguntas"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Pergunta *</label>
+                    <textarea id="form-question" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500" 
+                              rows="3" placeholder="Digite a pergunta..." required></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Ordem</label>
+                        <input type="number" id="form-order" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-teal-500" 
+                               value="0" min="0">
+                    </div>
+                    <div class="flex items-center pt-8">
+                        <input type="checkbox" id="form-active" class="mr-2" checked>
+                        <label for="form-active" class="text-sm font-medium text-slate-700">Pergunta ativa</label>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" id="form-submit" class="flex-1 bg-teal-600 text-white font-bold py-3 rounded-lg hover:bg-teal-700 transition-colors">
+                        💾 Salvar
+                    </button>
+                    <button type="button" id="form-cancel" class="flex-1 bg-slate-400 text-white font-bold py-3 rounded-lg hover:bg-slate-500 transition-colors">
+                        ❌ Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/admin.js"></script>
+
+</body>
+</html>
