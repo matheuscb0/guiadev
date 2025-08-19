@@ -22,6 +22,13 @@ class AdminPanel {
         this.logoutBtn = document.getElementById('logout-btn');
         this.addQuestionBtn = document.getElementById('add-question-btn');
         
+        // Bulk import elements
+        this.bulkImportBtn = document.getElementById('bulk-import-btn');
+        this.bulkDropdown = document.getElementById('bulk-dropdown');
+        this.bulkImportModal = document.getElementById('bulk-import-modal');
+        this.bulkImportCancel = document.getElementById('bulk-import-cancel');
+        this.bulkImportSubmit = document.getElementById('bulk-import-submit');
+        
         // Filters
         this.filterSeniority = document.getElementById('filter-seniority');
         this.filterStack = document.getElementById('filter-stack');
@@ -65,6 +72,52 @@ class AdminPanel {
         // Admin panel
         this.logoutBtn.addEventListener('click', () => this.handleLogout());
         this.addQuestionBtn.addEventListener('click', () => this.openAddQuestionModal());
+        
+        // Bulk import
+        this.bulkImportBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.bulkDropdown.classList.toggle('hidden');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            this.bulkDropdown.classList.add('hidden');
+        });
+        
+        // Bulk import options
+        document.getElementById('import-csv-btn').addEventListener('click', () => this.openBulkImport('csv'));
+        document.getElementById('bulk-form-btn').addEventListener('click', () => this.openBulkImport('form'));
+        document.getElementById('download-template-btn').addEventListener('click', () => this.downloadTemplate());
+        
+        // Bulk import modal
+        this.bulkImportCancel.addEventListener('click', () => this.closeBulkImport());
+        this.bulkImportSubmit.addEventListener('click', () => this.submitBulkImport());
+        
+        // Tab switching
+        document.getElementById('tab-csv').addEventListener('click', () => this.switchTab('csv'));
+        document.getElementById('tab-form').addEventListener('click', () => this.switchTab('form'));
+        
+        // File uploads
+        document.getElementById('csv-file').addEventListener('change', (e) => this.handleFileUpload(e, 'csv'));
+        
+        // Preview buttons
+        document.getElementById('preview-csv').addEventListener('click', () => this.previewData('csv'));
+        
+        // Auto preview for form when typing
+        document.getElementById('bulk-questions').addEventListener('input', () => {
+            clearTimeout(this.formPreviewTimeout);
+            this.formPreviewTimeout = setTimeout(() => {
+                try {
+                    this.previewData('form');
+                } catch (e) {
+                    // Ignore errors during typing
+                }
+            }, 1000);
+        });
+        
+        // Template downloads
+        document.getElementById('download-csv-template').addEventListener('click', () => this.downloadTemplate('csv'));
+        document.getElementById('download-csv-simple').addEventListener('click', () => this.downloadSimpleCSV());
         
         // Filters
         this.filterSeniority.addEventListener('change', () => this.applyFilters());
@@ -389,6 +442,358 @@ class AdminPanel {
         setTimeout(() => {
             notification.remove();
         }, 4000);
+    }
+
+    // ===== BULK IMPORT METHODS =====
+    
+    openBulkImport(tab = 'csv') {
+        this.bulkDropdown.classList.add('hidden');
+        this.switchTab(tab);
+        this.bulkImportModal.classList.add('visible');
+        this.resetBulkImport();
+    }
+
+    closeBulkImport() {
+        this.bulkImportModal.classList.remove('visible');
+        this.resetBulkImport();
+    }
+
+    resetBulkImport() {
+        // Clear all inputs
+        document.getElementById('csv-file').value = '';
+        document.getElementById('csv-content').value = '';
+        document.getElementById('bulk-seniority').value = '';
+        document.getElementById('bulk-stack').value = '';
+        document.getElementById('bulk-category').value = '';
+        document.getElementById('bulk-category-goal').value = '';
+        document.getElementById('bulk-questions').value = '';
+        
+        // Hide preview
+        document.getElementById('preview-area').classList.add('hidden');
+        this.bulkImportSubmit.disabled = true;
+        
+        // Clear any messages
+        const existingMessages = this.bulkImportModal.querySelectorAll('.bulk-message');
+        existingMessages.forEach(msg => msg.remove());
+    }
+
+    switchTab(tab) {
+        // Update tab buttons
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.getElementById(`tab-${tab}`).classList.add('active');
+        
+        // Show/hide content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.add('hidden');
+        });
+        document.getElementById(`${tab}-import`).classList.remove('hidden');
+    }
+
+    handleFileUpload(event, type) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const content = e.target.result;
+            if (type === 'csv') {
+                document.getElementById('csv-content').value = content;
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    parseCSV(content) {
+        const lines = content.trim().split('\n');
+        const questions = [];
+        
+        // Detectar separador (vírgula ou ponto e vírgula)
+        const firstLine = lines[0];
+        const separator = firstLine.includes(';') ? ';' : ',';
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            
+            // Parsing mais robusto para CSV
+            const cols = this.parseCSVLine(line, separator);
+            
+            if (cols.length >= 5) {
+                questions.push({
+                    seniority: cols[0],
+                    stack: cols[1],
+                    category: cols[2],
+                    category_goal: cols[3] || '',
+                    question: cols[4],
+                    order_position: parseInt(cols[5]) || 0
+                });
+            }
+        }
+        
+        return questions;
+    }
+
+    parseCSVLine(line, separator) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        let quoteChar = '';
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            const nextChar = line[i + 1];
+            
+            if ((char === '"' || char === "'") && !inQuotes) {
+                inQuotes = true;
+                quoteChar = char;
+            } else if (char === quoteChar && inQuotes) {
+                if (nextChar === quoteChar) {
+                    // Escaped quote
+                    current += char;
+                    i++; // Skip next char
+                } else {
+                    inQuotes = false;
+                    quoteChar = '';
+                }
+            } else if (char === separator && !inQuotes) {
+                result.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        
+        result.push(current.trim());
+        return result;
+    }
+
+    parseForm() {
+        const defaultSeniority = document.getElementById('bulk-seniority').value;
+        const defaultStack = document.getElementById('bulk-stack').value;
+        const defaultCategory = document.getElementById('bulk-category').value;
+        const defaultCategoryGoal = document.getElementById('bulk-category-goal').value;
+        const questionsText = document.getElementById('bulk-questions').value;
+        
+        if (!questionsText.trim()) {
+            throw new Error('Digite pelo menos uma pergunta');
+        }
+        
+        const lines = questionsText.trim().split('\n');
+        const questions = [];
+        
+        lines.forEach((line, index) => {
+            line = line.trim();
+            if (!line) return;
+            
+            // Check if line has custom format: senioridade|stack|categoria|objetivo|pergunta
+            if (line.includes('|')) {
+                const parts = line.split('|').map(p => p.trim());
+                if (parts.length >= 5) {
+                    questions.push({
+                        seniority: parts[0],
+                        stack: parts[1],
+                        category: parts[2],
+                        category_goal: parts[3],
+                        question: parts[4],
+                        order_position: index + 1
+                    });
+                }
+            } else {
+                // Use default values
+                questions.push({
+                    seniority: defaultSeniority,
+                    stack: defaultStack,
+                    category: defaultCategory,
+                    category_goal: defaultCategoryGoal,
+                    question: line,
+                    order_position: index + 1
+                });
+            }
+        });
+        
+        return questions;
+    }
+
+    previewData(type) {
+        try {
+            let questions = [];
+            
+            if (type === 'csv') {
+                const content = document.getElementById('csv-content').value;
+                if (!content.trim()) {
+                    throw new Error('Cole o conteúdo CSV ou carregue um arquivo');
+                }
+                questions = this.parseCSV(content);
+            } else if (type === 'form') {
+                questions = this.parseForm();
+            }
+
+            if (questions.length === 0) {
+                throw new Error('Nenhuma pergunta válida encontrada');
+            }
+
+            this.displayPreview(questions);
+            this.bulkImportSubmit.disabled = false;
+            this.showBulkMessage('Preview gerado com sucesso!', 'success');
+
+        } catch (error) {
+            this.showBulkMessage(error.message, 'error');
+            this.bulkImportSubmit.disabled = true;
+        }
+    }
+
+    displayPreview(questions) {
+        const tbody = document.getElementById('preview-table-body');
+        const stats = document.getElementById('preview-stats');
+        
+        tbody.innerHTML = questions.map(q => `
+            <tr>
+                <td class="p-2">${q.seniority}</td>
+                <td class="p-2">${q.stack}</td>
+                <td class="p-2">${q.category}</td>
+                <td class="p-2">${q.question.substring(0, 50)}${q.question.length > 50 ? '...' : ''}</td>
+            </tr>
+        `).join('');
+        
+        const uniqueStacks = [...new Set(questions.map(q => q.stack))];
+        const uniqueCategories = [...new Set(questions.map(q => q.category))];
+        
+        stats.textContent = `${questions.length} perguntas • ${uniqueStacks.length} stacks • ${uniqueCategories.length} categorias`;
+        
+        document.getElementById('preview-area').classList.remove('hidden');
+        
+        // Store questions for import
+        this.questionsToImport = questions;
+    }
+
+    async submitBulkImport() {
+        if (!this.questionsToImport || this.questionsToImport.length === 0) {
+            this.showBulkMessage('Nenhuma pergunta para importar. Gere o preview primeiro.', 'error');
+            return;
+        }
+
+        const importBtn = this.bulkImportSubmit;
+        const originalText = importBtn.textContent;
+        importBtn.disabled = true;
+        importBtn.textContent = 'Importando...';
+
+        try {
+            const response = await fetch('/api/admin/questions/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    questions: this.questionsToImport,
+                    password: this.currentPassword
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Erro na importação');
+            }
+
+            const result = await response.json();
+            
+            // Show results
+            if (result.results.success > 0) {
+                this.showBulkMessage(
+                    `✅ ${result.results.success}/${result.results.total} perguntas importadas com sucesso!`,
+                    result.results.errors.length === 0 ? 'success' : 'warning'
+                );
+            }
+
+            // Show errors if any
+            if (result.results.errors.length > 0) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'bulk-message bulk-error mt-2 max-h-32 overflow-y-auto';
+                errorDiv.innerHTML = `
+                    <strong>Erros encontrados:</strong><br>
+                    ${result.results.errors.slice(0, 5).map(e => `Linha ${e.index + 1}: ${e.error}`).join('<br>')}
+                    ${result.results.errors.length > 5 ? `<br>... e mais ${result.results.errors.length - 5} erros` : ''}
+                `;
+                this.bulkImportModal.querySelector('.modal-content').appendChild(errorDiv);
+            }
+
+            // Reload questions if any were successful
+            if (result.results.success > 0) {
+                await this.loadQuestions();
+                
+                // Close modal after a delay
+                setTimeout(() => {
+                    this.closeBulkImport();
+                }, 3000);
+            }
+
+        } catch (error) {
+            this.showBulkMessage(`Erro durante a importação: ${error.message}`, 'error');
+        } finally {
+            importBtn.disabled = false;
+            importBtn.textContent = originalText;
+        }
+    }
+
+    showBulkMessage(message, type) {
+        // Remove existing messages
+        const existingMessages = this.bulkImportModal.querySelectorAll('.bulk-message');
+        existingMessages.forEach(msg => msg.remove());
+        
+        // Add new message
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `bulk-message bulk-${type}`;
+        messageDiv.textContent = message;
+        
+        const modalContent = this.bulkImportModal.querySelector('.modal-content');
+        modalContent.insertBefore(messageDiv, modalContent.lastElementChild);
+    }
+
+    downloadTemplate(type = 'csv') {
+        if (type === 'csv') {
+            // CSV para Excel brasileiro (separador ; e encoding UTF-8 com BOM)
+            const csvContent = `seniority;stack;category;category_goal;question;order_position
+Júnior;JavaScript;Conceitos Fundamentais;Verificar conhecimento básico da linguagem;O que é hoisting em JavaScript?;1
+Júnior;JavaScript;Conceitos Fundamentais;Verificar conhecimento básico da linguagem;Qual a diferença entre == e === em JavaScript?;2
+Pleno;Java;Framework (Spring);Medir conhecimento do framework;O que é Injeção de Dependência (DI)?;1`;
+            
+            this.downloadFileWithBOM(csvContent, 'template_perguntas_excel.csv', 'text/csv');
+        }
+    }
+
+    downloadSimpleCSV() {
+        // CSV simples com vírgulas (padrão universal)
+        const csvContent = `seniority,stack,category,category_goal,question,order_position
+"Júnior","JavaScript","Conceitos Fundamentais","Verificar conhecimento básico da linguagem","O que é hoisting em JavaScript?",1
+"Júnior","JavaScript","Conceitos Fundamentais","Verificar conhecimento básico da linguagem","Qual a diferença entre == e === em JavaScript?",2
+"Pleno","Java","Framework (Spring)","Medir conhecimento do framework","O que é Injeção de Dependência (DI)?",1`;
+        
+        this.downloadFile(csvContent, 'template_perguntas_simples.csv', 'text/csv');
+    }
+
+    downloadFile(content, filename, contentType) {
+        const blob = new Blob([content], { type: contentType });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }
+
+    downloadFileWithBOM(content, filename, contentType) {
+        // Adiciona BOM (Byte Order Mark) para UTF-8 - ajuda o Excel a reconhecer a codificação
+        const BOM = '\uFEFF';
+        const blob = new Blob([BOM + content], { type: contentType + ';charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
     }
 }
 

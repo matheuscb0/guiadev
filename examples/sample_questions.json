@@ -1,0 +1,50 @@
+[
+  {
+    "seniority": "Júnior",
+    "stack": "JavaScript",
+    "category": "Conceitos Fundamentais",
+    "category_goal": "Verificar conhecimento básico da linguagem",
+    "question": "O que é hoisting em JavaScript?",
+    "order_position": 1
+  },
+  {
+    "seniority": "Júnior",
+    "stack": "JavaScript", 
+    "category": "Conceitos Fundamentais",
+    "category_goal": "Verificar conhecimento básico da linguagem",
+    "question": "Qual a diferença entre == e === em JavaScript?",
+    "order_position": 2
+  },
+  {
+    "seniority": "Júnior",
+    "stack": "JavaScript",
+    "category": "DOM e Eventos", 
+    "category_goal": "Verificar capacidade de manipular a interface",
+    "question": "Como você adicionaria um event listener a um elemento?",
+    "order_position": 1
+  },
+  {
+    "seniority": "Pleno",
+    "stack": "Java",
+    "category": "Conceitos Avançados",
+    "category_goal": "Verificar domínio de conceitos intermediários", 
+    "question": "Explique a diferença entre HashMap e TreeMap.",
+    "order_position": 1
+  },
+  {
+    "seniority": "Pleno",
+    "stack": "Java",
+    "category": "Spring Framework",
+    "category_goal": "Medir conhecimento do ecosystem Spring",
+    "question": "Explique o ciclo de vida de um bean no Spring.",
+    "order_position": 1
+  },
+  {
+    "seniority": "Sênior",
+    "stack": "Python", 
+    "category": "Fundamentos da Linguagem",
+    "category_goal": "Avaliar domínio dos mecanismos internos",
+    "question": "Discuta o Global Interpreter Lock (GIL) e suas implicações.",
+    "order_position": 1
+  }
+]

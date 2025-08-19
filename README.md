@@ -5,10 +5,13 @@ Uma aplicação web moderna para preparação de entrevistas técnicas com intel
 ## 🚀 Características
 
 - **Banco de Dados**: Perguntas organizadas no Supabase para fácil manutenção
-- **IA Integrada**: Geração de respostas modelo e feedback personalizado
-- **Interface Moderna**: Design responsivo com Tailwind CSS
+- **IA Integrada**: Geração de respostas modelo e feedback personalizado via OpenRouter
+- **Interface Moderna**: Design responsivo com Tailwind CSS e animações suaves
 - **Simulação de Entrevistas**: Prática interativa com feedback da IA
 - **Filtros Inteligentes**: Por senioridade e tecnologia
+- **Painel Administrativo**: Interface completa para gerenciar perguntas
+- **Segurança**: Autenticação admin e validações robustas
+- **Performance**: Carregamento otimizado e cache inteligente
 
 ## 📁 Estrutura do Projeto
 
@@ -108,10 +111,22 @@ ADMIN_PASSWORD=suaSenhaPersonalizada
 ### 6. Executar a aplicação
 
 ```bash
+# Produção
 npm start
+
+# Desenvolvimento (com nodemon para auto-reload)
+npm run dev
 ```
 
 Acesse: `http://localhost:3000`
+
+### 7. Popular com dados iniciais (Opcional)
+
+Para começar com perguntas de exemplo:
+
+1. No SQL Editor do Supabase
+2. Execute o arquivo `database/sample_data.sql`
+3. Isso adicionará perguntas para diferentes tecnologias e níveis
 
 ### 7. Verificar se tudo funciona
 
@@ -231,6 +246,12 @@ Estas perguntas aparecem organizadas por categoria na interface e podem ser gere
   - ✏️ Editar perguntas existentes
   - 🗑️ Deletar perguntas
   - 👁️ Ativar/desativar perguntas
+- **Importação em Massa**: 
+  - 📊 **Importar CSV**: Upload de arquivo ou colar texto
+  - 📋 **Importar JSON**: Formato estruturado para desenvolvedores
+  - ✏️ **Formulário Múltiplo**: Adicionar várias perguntas rapidamente
+  - ⬇️ **Templates**: Baixar modelos de exemplo
+  - 👁️ **Preview**: Visualizar antes de importar
 - **Filtros Avançados**: Por senioridade, tecnologia e status
 - **Interface Responsiva**: Funciona bem em desktop e mobile
 
@@ -254,18 +275,35 @@ Estas perguntas aparecem organizadas por categoria na interface e podem ser gere
 
 ## 🔧 Melhorias Implementadas
 
-### Antes (arquivo monolítico)
-- ❌ HTML de 800+ linhas
-- ❌ CSS, JS e dados misturados
-- ❌ Dados hardcoded
-- ❌ Difícil manutenção
+### ✅ Arquitetura Moderna
+- **Separação de responsabilidades**: Frontend, Backend, Database
+- **API RESTful**: Endpoints bem estruturados e documentados
+- **Banco de dados relacional**: Estrutura normalizada e escalável
+- **Autenticação robusta**: Sistema de login admin seguro
 
-### Depois (arquitetura moderna)
-- ✅ Arquivos separados e organizados
-- ✅ Banco de dados estruturado
-- ✅ API RESTful
-- ✅ Código modular e reutilizável
-- ✅ Fácil adição de novas perguntas
+### ✅ Interface e UX
+- **Design responsivo**: Funciona perfeitamente em mobile e desktop
+- **Animações suaves**: Transições e feedback visual aprimorado
+- **Acessibilidade**: Suporte a navegação por teclado e screen readers
+- **Estados de loading**: Feedback visual durante operações assíncronas
+
+### ✅ Funcionalidades Avançadas
+- **Painel administrativo**: CRUD completo de perguntas
+- **Filtros dinâmicos**: Por senioridade, tecnologia e status
+- **Simulação de entrevistas**: IA para feedback personalizado
+- **Estatísticas em tempo real**: Dashboard com métricas importantes
+
+### ✅ Segurança e Performance
+- **Validação de entrada**: Sanitização de dados e proteção contra ataques
+- **Rate limiting**: Proteção contra abuso das APIs
+- **CORS configurado**: Segurança para requisições cross-origin
+- **Timeouts**: Prevenção contra travamentos
+
+### ✅ Developer Experience
+- **Hot reload**: Desenvolvimento com nodemon
+- **Logs estruturados**: Debugging facilitado
+- **Documentação completa**: README detalhado com exemplos
+- **Scripts npm**: Comandos úteis para desenvolvimento
 
 ## 📈 Próximos Passos
 

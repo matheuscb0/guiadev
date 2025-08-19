@@ -69,6 +69,10 @@ web_modules/
 
 # dotenv environment variables file
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .env.test
 
 # parcel-bundler cache files
@@ -121,3 +125,50 @@ dist
 # Files that might appear on external disk
 .Spotlight-V100
 .Trashes
+
+# Windows files
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+
+# Linux files
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Database files (optional - uncomment if needed)
+# *.db
+# *.sqlite
+# *.sqlite3
+
+# Backup files
+*.backup
+*.bak
+*.orig
+
+# Upload directories (if you have user uploads)
+uploads/
+tmp/
+
+# SSL certificates (if any)
+*.pem
+*.key
+*.crt
+*.cert
+
+# API keys and secrets (extra safety)
+config/secrets.js
+secrets/

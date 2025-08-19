@@ -1,0 +1,12 @@
+seniority;stack;category;category_goal;question;order_position
+Júnior;JavaScript;Conceitos Fundamentais;Verificar conhecimento básico da linguagem;O que é hoisting em JavaScript?;1
+Júnior;JavaScript;Conceitos Fundamentais;Verificar conhecimento básico da linguagem;Qual a diferença entre == e === em JavaScript?;2
+Júnior;JavaScript;Conceitos Fundamentais;Verificar conhecimento básico da linguagem;Explique o conceito de closure em JavaScript.;3
+Júnior;JavaScript;DOM e Eventos;Verificar capacidade de manipular a interface;Como você adicionaria um event listener a um elemento?;1
+Júnior;JavaScript;DOM e Eventos;Verificar capacidade de manipular a interface;Qual a diferença entre innerHTML e textContent?;2
+Pleno;Java;Conceitos Avançados;Verificar domínio de conceitos intermediários;Explique a diferença entre HashMap e TreeMap.;1
+Pleno;Java;Conceitos Avançados;Verificar domínio de conceitos intermediários;Como funcionam as anotações customizadas em Java?;2
+Pleno;Java;Spring Framework;Medir conhecimento do ecosystem Spring;Explique o ciclo de vida de um bean no Spring.;1
+Pleno;Java;Spring Framework;Medir conhecimento do ecosystem Spring;Como implementar cache distribuído com Spring Boot?;2
+Sênior;Python;Fundamentos da Linguagem;Avaliar domínio dos mecanismos internos;Discuta o Global Interpreter Lock (GIL) e suas implicações.;1
+Sênior;Python;Frameworks Web;Medir experiência na arquitetura de sistemas complexos;Como você gerenciaria tarefas assíncronas com Celery?;1

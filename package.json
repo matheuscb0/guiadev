@@ -5,8 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon server.js",
+    "test": "echo \"Tests not implemented yet\" && exit 0",
+    "setup": "echo \"📋 Setup do GuiaDev:\\n1. Copie .env.example para .env\\n2. Configure suas chaves no .env\\n3. Execute o schema.sql no Supabase\\n4. npm start\\n\\nVeja README.md para instruções detalhadas\""
   },
   "keywords": [
     "interview",
@@ -25,5 +26,8 @@
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
   }
 }

@@ -6,10 +6,15 @@ const open = require('open');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production' ? 
+        ['https://your-domain.com'] : 
+        ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    credentials: true
+}));
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public'));
 
 const API_KEY = process.env.OPENROUTER_API_KEY;
@@ -37,8 +42,8 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 // Middleware para verificar autenticação admin
 const verifyAdmin = (req, res, next) => {
     const { password } = req.body;
-    if (password !== ADMIN_PASSWORD) {
-        return res.status(401).json({ error: 'Senha incorreta' });
+    if (!password || password !== ADMIN_PASSWORD) {
+        return res.status(401).json({ error: 'Senha incorreta ou não fornecida' });
     }
     next();
 };
@@ -141,6 +146,72 @@ app.get('/api/random-question/:seniority/:stack', async (req, res) => {
         res.json({ question: randomQuestion.question });
     } catch (error) {
         console.error('Erro na rota /api/random-question:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Importação em massa de perguntas
+app.post('/api/admin/questions/bulk', verifyAdmin, async (req, res) => {
+    try {
+        const { questions } = req.body;
+        
+        if (!questions || !Array.isArray(questions) || questions.length === 0) {
+            return res.status(400).json({ error: 'Lista de perguntas é obrigatória' });
+        }
+
+        const results = {
+            success: 0,
+            errors: [],
+            total: questions.length
+        };
+
+        for (let i = 0; i < questions.length; i++) {
+            const question = questions[i];
+            
+            // Validar campos obrigatórios
+            if (!question.seniority || !question.stack || !question.category || !question.question) {
+                results.errors.push({
+                    index: i,
+                    error: 'Campos obrigatórios: seniority, stack, category, question'
+                });
+                continue;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('interview_questions')
+                    .insert([{
+                        seniority: question.seniority,
+                        stack: question.stack,
+                        category: question.category,
+                        category_goal: question.category_goal || '',
+                        question: question.question,
+                        order_position: question.order_position || 0
+                    }])
+                    .select();
+
+                if (error) {
+                    results.errors.push({
+                        index: i,
+                        error: error.message
+                    });
+                } else {
+                    results.success++;
+                }
+            } catch (error) {
+                results.errors.push({
+                    index: i,
+                    error: error.message
+                });
+            }
+        }
+
+        res.json({
+            message: `Importação concluída: ${results.success}/${results.total} perguntas adicionadas`,
+            results
+        });
+    } catch (error) {
+        console.error('Erro na importação em massa:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
@@ -270,6 +341,11 @@ app.post('/api/admin/verify', (req, res) => {
 
 app.post('/api/generate', async (req, res) => {
     try {
+        // Validação básica
+        if (!req.body.messages || !Array.isArray(req.body.messages)) {
+            return res.status(400).json({ error: 'Mensagens são obrigatórias' });
+        }
+
         const url = `${BASE_API_URL}/chat/completions`;
         const headers = {
             'Authorization': `Bearer ${API_KEY}`,
@@ -277,17 +353,33 @@ app.post('/api/generate', async (req, res) => {
         };
         const data = {
             model: req.body.model || "openai/gpt-oss-20b:free",
-            messages: req.body.messages
+            messages: req.body.messages,
+            max_tokens: 500, // Limitar tokens para controlar custos
+            temperature: 0.7
         };
-        const response = await axios.post(url, data, { headers });
+        
+        const response = await axios.post(url, data, { 
+            headers,
+            timeout: 30000 // 30 segundos de timeout
+        });
+        
         res.json(response.data);
     } catch (error) {
         console.error('Erro ao chamar a API de Geração:', error.response ? error.response.data : error.message);
-        res.status(error.response ? error.response.status : 500).json({ error: 'Falha ao chamar a API do OpenRouter' });
+        res.status(error.response ? error.response.status : 500).json({ 
+            error: 'Falha ao chamar a API do OpenRouter',
+            details: error.response?.data?.error || 'Erro interno do servidor'
+        });
     }
 });
 
 app.listen(port, () => {
-    console.log(`\nServidor proxy rodando em http://localhost:${port}`);
-    console.log(`Acesse sua aplicação em http://localhost:${port}/index.html\n`);
+    console.log(`\n🚀 Servidor GuiaDev rodando em http://localhost:${port}`);
+    console.log(`📱 Interface principal: http://localhost:${port}/index.html`);
+    console.log(`🛠️  Painel admin: http://localhost:${port}/admin.html`);
+    console.log(`\n📋 Status das configurações:`);
+    console.log(`   ✅ OpenRouter API: ${API_KEY ? 'Configurada' : '❌ Não configurada'}`);
+    console.log(`   ✅ Supabase: ${supabaseUrl && supabaseKey ? 'Configurado' : '❌ Não configurado'}`);
+    console.log(`   🔐 Senha admin: ${ADMIN_PASSWORD !== 'admin123' ? 'Personalizada' : 'Padrão (admin123)'}`);
+    console.log(`\n💡 Acesse a documentação completa no README.md\n`);
 });
