@@ -9,7 +9,6 @@ Uma aplicação web moderna para preparação de entrevistas técnicas com intel
 - **Interface Moderna**: Design responsivo com Tailwind CSS
 - **Simulação de Entrevistas**: Prática interativa com feedback da IA
 - **Filtros Inteligentes**: Por senioridade e tecnologia
-- **Gráficos Dinâmicos**: Visualização do foco por área de conhecimento
 
 ## 📁 Estrutura do Projeto
 
@@ -23,7 +22,7 @@ guiadev/
 │   │   └── app.js         # Lógica principal
 │   └── index.html         # Interface principal
 ├── database/              # Scripts do banco
-│   └── schema.sql         # Estrutura das tabelas + dados iniciais
+│   └── schema.sql         # Estrutura das tabelas
 ├── server.js              # Servidor Express
 ├── package.json
 └── .env.example          # Exemplo de configuração
@@ -77,18 +76,15 @@ SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ```sql
 -- Cole todo o conteúdo do arquivo database/schema.sql aqui
--- Este script criará as tabelas: interview_questions e chart_data
--- E populará com os dados iniciais do gráfico
+-- Este script criará a tabela: interview_questions
 ```
 
 4. Clique em **Run** para executar o script
-5. Verifique se as tabelas foram criadas em **Table Editor**
+5. Verifique se a tabela foi criada em **Table Editor**
 
-#### 3.4. Verificar a criação das tabelas
+#### 3.4. Verificar a criação da tabela
 Após executar o script, você deve ter:
 - **interview_questions**: Tabela principal com as perguntas
-- **chart_data**: Dados para os gráficos de radar
-- Dados iniciais já inseridos para o gráfico
 
 ### 4. Configuração da OpenRouter (IA)
 
@@ -142,20 +138,6 @@ CREATE TABLE interview_questions (
     is_active BOOLEAN DEFAULT true,         -- Para ativar/desativar perguntas
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
-
-#### `chart_data`
-```sql
--- Dados para os gráficos de radar por senioridade
-CREATE TABLE chart_data (
-    id SERIAL PRIMARY KEY,
-    seniority VARCHAR(20) NOT NULL,         -- Nível de senioridade
-    label VARCHAR(100) NOT NULL,            -- Ex: 'Fundamentos', 'Arquitetura'
-    value INTEGER NOT NULL CHECK (value >= 0 AND value <= 5), -- Peso de 0 a 5
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(seniority, label)
 );
 ```
 
@@ -225,7 +207,6 @@ Estas perguntas aparecem organizadas por categoria na interface e podem ser gere
 
 ## 📊 API Endpoints
 - `GET /api/questions/:seniority/:stack` - Buscar perguntas
-- `GET /api/chart-data/:seniority` - Dados do gráfico
 - `GET /api/stacks/:seniority` - Stacks disponíveis
 - `GET /api/random-question/:seniority/:stack` - Pergunta aleatória
 - `POST /api/generate` - Gerar resposta com IA
@@ -265,7 +246,6 @@ Estas perguntas aparecem organizadas por categoria na interface e podem ser gere
 - **Exploração**: Navegue por perguntas organizadas por senioridade e tecnologia
 - **IA Assistente**: Gere respostas modelo para qualquer pergunta
 - **Simulação**: Pratique entrevistas com feedback da IA
-- **Visualização**: Entenda o foco de cada nível através de gráficos
 
 ### Para Administradores
 - **Fácil Manutenção**: Adicione/edite perguntas direto no Supabase
@@ -334,7 +314,6 @@ Se encontrar problemas:
    - Verifique se os dados iniciais foram inseridos:
    ```sql
    SELECT COUNT(*) FROM interview_questions;
-   SELECT COUNT(*) FROM chart_data;
    ```
 
 5. **Problemas de permissão**:

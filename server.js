@@ -91,29 +91,6 @@ app.get('/api/questions/:seniority/:stack', async (req, res) => {
     }
 });
 
-// Rota para buscar dados do gráfico
-app.get('/api/chart-data/:seniority', async (req, res) => {
-    try {
-        const { seniority } = req.params;
-        
-        const { data, error } = await supabase
-            .from('chart_data')
-            .select('*')
-            .eq('seniority', seniority)
-            .order('label', { ascending: true });
-
-        if (error) {
-            console.error('Erro do Supabase:', error);
-            return res.status(500).json({ error: 'Erro ao buscar dados do gráfico' });
-        }
-
-        res.json(data);
-    } catch (error) {
-        console.error('Erro na rota /api/chart-data:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-
 // Rota para buscar stacks disponíveis por senioridade
 app.get('/api/stacks/:seniority', async (req, res) => {
     try {

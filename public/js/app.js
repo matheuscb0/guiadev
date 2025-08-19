@@ -4,7 +4,6 @@ class InterviewApp {
         this.api = new QuestionsAPI();
         this.currentSeniority = 'Júnior';
         this.currentStack = 'JavaScript/React';
-        this.seniorityChart = null;
         this.seniorityLevels = ['Estagiário', 'Júnior', 'Pleno', 'Sênior'];
         this.availableStacks = [];
         
@@ -29,7 +28,6 @@ class InterviewApp {
         try {
             this.showLoading();
             await this.loadInitialData();
-            this.initChart();
             this.updateView();
             this.setupEventListeners();
             this.hideLoading();
@@ -73,12 +71,11 @@ class InterviewApp {
         items.forEach(item => {
             const button = document.createElement('button');
             button.textContent = item;
-            const baseClasses = 'px-4 py-2 rounded-full text-sm md:text-base font-semibold transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2';
             
             if (type === 'seniority') {
-                button.className = `${baseClasses} bg-white text-teal-700 border border-teal-200 hover:bg-teal-50 focus:ring-teal-500`;
+                button.className = 'filter-button seniority-button focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2';
             } else {
-                button.className = `${baseClasses} bg-slate-100 text-slate-600 hover:bg-slate-200 focus:ring-slate-500`;
+                button.className = 'filter-button stack-button focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2';
             }
             
             if (item === activeItem) {
@@ -145,9 +142,6 @@ class InterviewApp {
             // Carregar perguntas
             await this.loadQuestions();
             
-            // Atualizar gráfico
-            await this.updateChart();
-            
         } catch (error) {
             console.error('Erro ao atualizar view:', error);
             this.showError('Erro ao atualizar a interface.');
@@ -189,18 +183,18 @@ class InterviewApp {
         let header = this.elements.questionsSection.querySelector('.questions-header');
         if (!header) {
             header = document.createElement('div');
-            header.className = 'questions-header flex justify-between items-center mb-6';
+            header.className = 'questions-header';
             this.elements.questionsSection.insertBefore(header, this.elements.questionsContainer);
         }
         
         header.innerHTML = `
-            <div>
-                <h3 class="text-2xl font-bold text-slate-800">${this.currentStack} - Nível ${this.currentSeniority}</h3>
-                <p class="text-slate-600 mt-1">${data.intro}</p>
+            <div class="text-center mb-4">
+                <h3 class="text-3xl font-bold text-slate-800 mb-2">${this.currentStack} - Nível ${this.currentSeniority}</h3>
+                <p class="text-slate-600 mb-4">${data.intro}</p>
+                <button id="simulate-interview-btn">
+                    🎯 Simular Entrevista
+                </button>
             </div>
-            <button id="simulate-interview-btn" class="bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors whitespace-nowrap">
-                🎯 Simular Entrevista
-            </button>
         `;
         
         // Adicionar listener para o botão de simulação
@@ -212,13 +206,13 @@ class InterviewApp {
 
     createQuestionCard(category) {
         const card = document.createElement('div');
-        card.className = 'bg-white border border-slate-200 rounded-xl p-6 shadow-sm fade-in';
+        card.className = 'question-card bg-white border border-slate-200 rounded-xl p-6 shadow-sm fade-in';
         
         const itemsHtml = category.items.map((item, index) => `
-            <li class="flex items-start justify-between group py-1">
-                <span class="flex-1 text-slate-700">${item}</span>
-                <div class="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button class="generate-answer-btn text-xs bg-teal-100 text-teal-700 px-2 py-1 rounded hover:bg-teal-200 transition-colors" data-question="${item}">
+            <li class="question-item flex items-start justify-between group">
+                <span class="flex-1 text-slate-700 leading-relaxed">${item}</span>
+                <div class="flex gap-1 ml-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button class="generate-answer-btn text-xs bg-teal-100 text-teal-700 px-3 py-1 rounded-full hover:bg-teal-200 transition-colors font-medium" data-question="${item}">
                         ✨ IA
                     </button>
                 </div>
@@ -226,9 +220,11 @@ class InterviewApp {
         `).join('');
 
         card.innerHTML = `
-            <h4 class="font-bold text-lg text-slate-800 mb-2">${category.title}</h4>
-            <p class="text-sm text-slate-500 italic mb-4"><strong>Objetivo:</strong> ${category.goal}</p>
-            <ul class="space-y-2 text-slate-600">${itemsHtml}</ul>
+            <div class="text-center mb-6">
+                <h4 class="font-bold text-xl text-slate-800 mb-2">${category.title}</h4>
+                <p class="text-sm text-slate-500 italic"><strong>Objetivo:</strong> ${category.goal}</p>
+            </div>
+            <ul class="space-y-1">${itemsHtml}</ul>
         `;
 
         // Adicionar event listeners para os botões
@@ -345,76 +341,6 @@ Use linguagem natural, correta e direta. Máximo 3-4 linhas.`;
             feedbackContainer.innerHTML = '<p class="text-red-500">Desculpe, ocorreu um erro ao gerar o feedback. Tente novamente.</p>';
             console.error(error);
         }
-    }
-
-    async updateChart() {
-        try {
-            const chartData = await this.api.fetchChartData(this.currentSeniority);
-            
-            if (this.seniorityChart && chartData.length > 0) {
-                const values = chartData.map(item => item.value);
-                const labels = chartData.map(item => item.label);
-                
-                this.seniorityChart.data.labels = labels;
-                this.seniorityChart.data.datasets[0].data = values;
-                this.seniorityChart.data.datasets[0].label = `Foco para ${this.currentSeniority}`;
-                this.seniorityChart.update();
-            }
-        } catch (error) {
-            console.error('Erro ao atualizar gráfico:', error);
-        }
-    }
-
-    initChart() {
-        const canvas = document.getElementById('seniorityChart');
-        if (!canvas) return;
-
-        const ctx = canvas.getContext('2d');
-        this.seniorityChart = new Chart(ctx, {
-            type: 'radar',
-            data: {
-                labels: ['Fundamentos', 'Ferramentas e Frameworks', 'Qualidade e Testes', 'Design e Arquitetura', 'Performance e Escala', 'Liderança e Estratégia'],
-                datasets: [{
-                    label: `Foco para ${this.currentSeniority}`,
-                    data: [4, 4, 3, 2, 2, 1], // Dados padrão
-                    backgroundColor: 'rgba(13, 148, 136, 0.2)',
-                    borderColor: 'rgb(13, 148, 136)',
-                    pointBackgroundColor: 'rgb(13, 148, 136)',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: 'rgb(13, 148, 136)'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    r: {
-                        beginAtZero: true,
-                        max: 5,
-                        pointLabels: {
-                            font: { size: 12 }
-                        },
-                        grid: {
-                            color: 'rgba(148, 163, 184, 0.3)'
-                        },
-                        angleLines: {
-                            color: 'rgba(148, 163, 184, 0.3)'
-                        }
-                    }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.label}: ${context.parsed.r}/5`;
-                            }
-                        }
-                    }
-                }
-            }
-        });
     }
 
     showModal(title, content) {

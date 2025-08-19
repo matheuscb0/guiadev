@@ -17,19 +17,6 @@ class QuestionsAPI {
         }
     }
 
-    async fetchChartData(seniority) {
-        try {
-            const response = await fetch(`/api/chart-data/${encodeURIComponent(seniority)}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Erro ao buscar dados do gráfico:', error);
-            throw error;
-        }
-    }
-
     async fetchAvailableStacks(seniority) {
         try {
             const response = await fetch(`/api/stacks/${encodeURIComponent(seniority)}`);
